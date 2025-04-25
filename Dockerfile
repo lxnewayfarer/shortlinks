@@ -10,8 +10,8 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o main .
+RUN go build -o shortlinks .
 
 EXPOSE ${PORT}
 
-CMD ["./main"]
+CMD ["./shortlinks"]

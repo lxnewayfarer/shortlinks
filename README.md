@@ -17,11 +17,12 @@ It is a microservice that implements shortened links
     - `docker compose up`
 
 ## Usage
-- Health-check
-    ```
-    GET /ping
-    200 OK
-    {
-        "response": "pong"
-    }
-    ```
+Health-check
+
+```
+GET /ping
+200 OK
+{
+    "response": "pong"
+}
+```

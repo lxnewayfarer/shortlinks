@@ -13,7 +13,7 @@ import (
 )
 
 func setupEnvironment() error {
-	requiredEnvVars := []string{"PORT"}
+	requiredEnvVars := []string{"APP_URL", "PORT", "REDIS_URL"}
 
 	if err := godotenv.Load(); err != nil {
 		return err

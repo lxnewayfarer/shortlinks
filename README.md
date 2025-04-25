@@ -6,6 +6,8 @@ It is a microservice that implements shortened links
 - Graceful shutdown
 - Health-check resource `/ping`
 - Docker containerized
+- 1,4×10^17 variants of short link
+- Caching of shorten links
 
 ## Setup
 - Fill `.env` file from `.env.example`

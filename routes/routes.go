@@ -7,7 +7,8 @@ import (
 
 func Init() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/ping", handlers.Ping)
+	mux.HandleFunc("GET /ping", handlers.Ping)
+	mux.HandleFunc("POST /shorten", handlers.Shorten)
 
 	return mux
 }

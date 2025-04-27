@@ -1,16 +1,66 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/joho/godotenv"
-	"github.com/lxnewayfarer/shortlinks/routes"
 	"log/slog"
 	"net/http"
 	"os"
-	"context"
 	"os/signal"
 	"time"
+
+	"github.com/joho/godotenv"
+	"github.com/lxnewayfarer/shortlinks/routes"
+	"github.com/lxnewayfarer/shortlinks/storage"
 )
+
+func main() {
+	slog.Info("Start Shortlinks")
+
+	if err := setupEnvironment(); err != nil {
+		panic(err)
+	}
+
+	port := os.Getenv("PORT")
+
+	rdb, err := storage.InitRedis()
+	if err != nil {
+		panic(err)
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	server := createServer(port, rdb)
+
+	go func() {
+		slog.Info("Starting server", "address", "http://localhost:"+port)
+
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			panic(err)
+		}
+	}()
+	<-ctx.Done()
+
+	shutdown(server)
+}
+
+func shutdown(server *http.Server) {
+	slog.Info("Shutting down server...")
+	if err := server.Shutdown(context.Background()); err != nil {
+		panic(err)
+	}
+	slog.Info("Goodbye!")
+}
+
+func createServer(port string, rdb storage.RedisClient) *http.Server {
+	return &http.Server{
+		Addr:              ":" + port,
+		Handler:           routes.Init(rdb),
+		ReadHeaderTimeout: 2 * time.Second,
+		WriteTimeout:      30 * time.Second,
+	}
+}
 
 func setupEnvironment() error {
 	requiredEnvVars := []string{"APP_URL", "PORT", "REDIS_URL"}
@@ -27,41 +77,4 @@ func setupEnvironment() error {
 	}
 
 	return nil
-}
-
-func main() {
-	slog.Info("Start Shortlinks")
-
-	if err := setupEnvironment(); err != nil {
-		slog.Error("Failed to setup environment", "err", err)
-		os.Exit(1)
-	}
-
-	port := os.Getenv("PORT")
-	slog.Info("Starting server",
-		"host", "localhost",
-		"port", port,
-	)
-	server := &http.Server{
-		Addr:              ":" + port,
-		Handler:           routes.Init(),
-		ReadHeaderTimeout: 2 * time.Second,
-		WriteTimeout:      30 * time.Second,
-	}
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
-	go func() {
-		slog.Info("Server is running", "address", "http://localhost:"+port)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("Server failed", "err", err)
-			os.Exit(1)
-		}
-	}()
-	<-ctx.Done()
-	slog.Info("Shutting down server...")
-	if err := server.Shutdown(context.Background()); err != nil {
-		slog.Error("Server shutdown error", "err", err)
-	}
-	slog.Info("Goodbye!")
 }

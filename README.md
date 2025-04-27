@@ -6,7 +6,7 @@ It is a microservice that implements shortened links
 - Graceful shutdown
 - Health-check resource `/ping`
 - Docker containerized
-- 1,4×10^17 variants of short link
+- 5,3×10^13 variants of short link of 8 symbols like `fjdJdsSf`
 - Caching of shorten links
 
 ## Setup

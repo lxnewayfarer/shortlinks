@@ -12,10 +12,11 @@ func ShortenLink(link string) (string, error) {
 
 	// check cache
 	// return if cache
+	// randSeq while exists randSeq in cache
 	// save link
 	// save cache
 
-	return appUrl + "/" + randSeq(10), nil
+	return appUrl + "/" + randSeq(8), nil
 }
 
 func randSeq(n int) string {

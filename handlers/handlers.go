@@ -15,6 +15,20 @@ func JSONResponse(w http.ResponseWriter, status int, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
+func Redirect(rdb storage.RedisClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		path := r.PathValue("path")
+		link, err := rdb.Get(r.Context(), path).Result()
+		if err != nil {
+			JSONResponse(w, http.StatusNotFound, map[string]string{
+				"response": "Not found",
+			})
+			return
+		}
+		http.Redirect(w, r, link, http.StatusSeeOther)
+	}
+}
+
 func Ping(rdb storage.RedisClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Ping")
@@ -23,6 +37,7 @@ func Ping(rdb storage.RedisClient) http.HandlerFunc {
 		})
 	}
 }
+
 func Shorten(rdb storage.RedisClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
@@ -30,10 +45,11 @@ func Shorten(rdb storage.RedisClient) http.HandlerFunc {
 			return
 		}
 
-		link := r.FormValue("link")
+		link := r.PostFormValue("link")
 
-		shortenLink, err := lib.ShortenLink(link)
+		shortenLink, err := lib.ShortenLink(r.Context(), rdb, link)
 		if err != nil {
+			slog.Error(err.Error())
 			http.Error(w, "Can not process link", http.StatusBadRequest)
 			return
 		}

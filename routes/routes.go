@@ -10,6 +10,7 @@ import (
 func Init(rdb storage.RedisClient) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /ping", handlers.Ping(rdb))
+	mux.HandleFunc("GET /l/{path}", handlers.Redirect(rdb))
 	mux.HandleFunc("POST /shorten", handlers.Shorten(rdb))
 
 	return mux

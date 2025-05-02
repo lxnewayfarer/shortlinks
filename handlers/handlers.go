@@ -47,7 +47,7 @@ func Shorten(rdb storage.RedisClient) http.HandlerFunc {
 
 		link := r.PostFormValue("link")
 
-		shortenLink, err := lib.ShortenLink(r.Context(), rdb, link)
+		shortenLink, err := lib.ShortenLink(r.Context(), rdb, link, lib.RandomInstance{})
 		if err != nil {
 			slog.Error(err.Error())
 			http.Error(w, "Can not process link", http.StatusBadRequest)

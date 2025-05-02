@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-redis/redismock/v9"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -25,4 +26,9 @@ func InitRedis() (*redis.Client, error) {
 	}
 
 	return redis.NewClient(opts), nil
+}
+
+func InitMockRedis() (*redis.Client, redismock.ClientMock) {
+	db, mock := redismock.NewClientMock()
+	return db, mock
 }

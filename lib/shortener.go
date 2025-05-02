@@ -2,15 +2,10 @@ package lib
 
 import (
 	"context"
-	"math/rand"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/lxnewayfarer/shortlinks/storage"
 )
-
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func shortlink(path string) string {
 	appUrl := os.Getenv("APP_URL")
@@ -18,13 +13,7 @@ func shortlink(path string) string {
 	return appUrl + "/l/" + path
 }
 
-func linkTTL() time.Duration {
-	ttl, _ := strconv.Atoi(os.Getenv("LINK_MINUTES_TTL"))
-	
-	return time.Duration(ttl) * time.Minute
-}
-
-func ShortenLink(ctx context.Context, rdb storage.RedisClient, link string) (string, error) {
+func ShortenLink(ctx context.Context, rdb storage.RedisClient, link string, r Random) (string, error) {
 	cached, err := rdb.Get(ctx, link).Result()
 	if err != nil && err != storage.Nil() {
 		return "", err
@@ -34,14 +23,14 @@ func ShortenLink(ctx context.Context, rdb storage.RedisClient, link string) (str
 		return shortlink(cached), nil
 	}
 
-	path, err := uniqSeq(ctx, rdb)
+	path, err := uniqSeq(ctx, rdb, r)
 	if err != nil {
 		return "", err
 	}
 
 	pipe := rdb.TxPipeline()
-	pipe.Set(ctx, path, link, linkTTL())
-	pipe.Set(ctx, link, path, linkTTL())
+	pipe.Set(ctx, path, link, 0)
+	pipe.Set(ctx, link, path, 0)
 	_, err = pipe.Exec(ctx)
 	if err != nil {
 		return "", err
@@ -50,8 +39,8 @@ func ShortenLink(ctx context.Context, rdb storage.RedisClient, link string) (str
 	return shortlink((path)), nil
 }
 
-func uniqSeq(ctx context.Context, rdb storage.RedisClient) (string, error) {
-	path := randSeq(8)
+func uniqSeq(ctx context.Context, rdb storage.RedisClient, r Random) (string, error) {
+	path := r.RandSeq(8)
 	for {
 		_, err := rdb.Get(ctx, path).Result()
 		if err != nil {
@@ -63,12 +52,4 @@ func uniqSeq(ctx context.Context, rdb storage.RedisClient) (string, error) {
 	}
 
 	return path, nil
-}
-
-func randSeq(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
 }

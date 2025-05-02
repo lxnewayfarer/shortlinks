@@ -6,7 +6,7 @@ It is a microservice that implements shortened links
 - Graceful shutdown
 - Health-check resource `/ping`
 - Docker containerized
-- 5,3×10^13 variants of short link of 8 symbols like `fjdJdsSf`
+- 2,18×10^14 variants of short link of 8 symbols like `fjdJ5sSf`
 - Caching of shorten links
 - Fully transactional
 
@@ -18,6 +18,7 @@ It is a microservice that implements shortened links
     - `docker run -p $PORT:$PORT shortlinks`
 - Docker comopse run (Redis and app):
     - `docker compose up`
+- Tests with coverage: `go test -cover -v`
 
 ## Usage
 Health-check
